@@ -31,14 +31,14 @@ with st.sidebar:
     # Clear Chat button
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = [{"role": "assistant", "content": f"Chat cleared. You are now using **{rag_mode}** mode. How can I assist you?"}]
-        st.session_state.rag_mode = rag_mode
-        st.rerun()  # Correct rerun method for Streamlit 1.25+
+        st.session_state.rag_mode = rag_mode  # Make sure mode stays in sync
+        st.rerun()  # Refresh app to show cleared state
 
-# --- Reset Chat on RAG Mode Change ---
+# --- Keep chat history on RAG Mode change ---
+# Simply update mode without clearing chat
 if st.session_state.rag_mode != rag_mode:
-    st.session_state.rag_mode = rag_mode
-    st.session_state.messages = [{"role": "assistant", "content": f"You are now using **{rag_mode}**. How can I help you?"}]
-    st.rerun()
+    st.session_state.rag_mode = rag_mode  # Update mode only, keep messages intact
+    st.rerun()  # Optional: refresh to update UI if necessary
 
 # --- RAG Placeholder Functions ---
 def basic_rag(query):
@@ -56,10 +56,7 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # Select appropriate RAG mode to generate a response
-    if rag_mode == "Basic RAG":
-        response = basic_rag(user_input)
-    else:
-        response = advanced_rag(user_input)
+    response = basic_rag(user_input) if st.session_state.rag_mode == "Basic RAG" else advanced_rag(user_input)
 
     # Handle empty/None responses
     response = response if response else "I'm sorry, I couldn't find an answer. Could you rephrase your question?"
