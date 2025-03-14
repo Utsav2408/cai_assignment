@@ -30,13 +30,13 @@ with st.sidebar:
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = [{"role": "assistant", "content": f"Chat cleared. You are now using **{rag_mode}** mode. How can I assist you?"}]
         st.session_state.rag_mode = rag_mode
-        st.experimental_rerun()  # Refresh to show cleared chat
+        st.rerun()  # ✅ Use st.rerun() instead of st.experimental_rerun()
 
 # --- Reset Chat on RAG Mode Change ---
 if st.session_state.rag_mode != rag_mode:
     st.session_state.rag_mode = rag_mode
     st.session_state.messages = [{"role": "assistant", "content": f"You are now using **{rag_mode}**. How can I help you?"}]
-    st.experimental_rerun()  # Refresh to apply mode change
+    st.rerun()  # ✅ Correct method
 
 # --- RAG Placeholder Functions ---
 def basic_rag(query):
