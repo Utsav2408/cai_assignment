@@ -1,4 +1,5 @@
 import streamlit as st
+import time  # Just for simulating delay, remove in production
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Chat Interface with RAG Options", page_icon="💬", layout="wide")
@@ -34,44 +35,62 @@ with st.sidebar:
             st.session_state.basic_messages = [{"role": "assistant", "content": "Chat cleared. You are now in **Basic RAG** mode. How can I assist you?"}]
         else:
             st.session_state.advanced_messages = [{"role": "assistant", "content": "Chat cleared. You are now in **Advanced RAG** mode. How can I assist you?"}]
-        st.session_state.rag_mode = rag_mode  # Ensure sync
+        st.session_state.rag_mode = rag_mode  # Sync mode
         st.rerun()
 
-# --- Update mode on switch without clearing chat ---
+# --- Keep chat history on RAG Mode change ---
 if st.session_state.rag_mode != rag_mode:
-    st.session_state.rag_mode = rag_mode  # Just update the active mode
+    st.session_state.rag_mode = rag_mode  # Update mode without clearing
+    st.rerun()
 
-# --- RAG Placeholder Functions ---
+# --- RAG Placeholder Functions (simulate delay) ---
 def basic_rag(query):
+    time.sleep(2)  # Simulate processing delay
     return f"[Basic RAG] Here is a simple answer to: '{query}'"
 
 def advanced_rag(query):
+    time.sleep(2)  # Simulate processing delay
     return f"[Advanced RAG] This is a detailed response to: '{query}', leveraging deeper context and semantic search."
 
-# --- Select Correct Message Store Based on Mode ---
+# --- Select Current Mode's Chat History ---
 current_chat = st.session_state.basic_messages if st.session_state.rag_mode == "Basic RAG" else st.session_state.advanced_messages
 
 # --- Input Field ---
 user_input = st.chat_input(f"Type your message here for {st.session_state.rag_mode}...")
 
-# --- Handle New User Input and Generate Response (Adding to Current Mode's Chat History) ---
+# --- Handle New User Input and "Typing" Simulation ---
 if user_input:
     # Add user message
     current_chat.append({"role": "user", "content": user_input})
 
-    # Generate response based on selected mode
-    if st.session_state.rag_mode == "Basic RAG":
-        response = basic_rag(user_input)
-    else:
-        response = advanced_rag(user_input)
+    # Add temporary loading message for bot
+    current_chat.append({"role": "assistant", "content": "Typing...", "status": "loading"})  # Placeholder
 
-    # Handle empty/None responses
-    response = response if response else "I'm sorry, I couldn't find an answer. Could you rephrase your question?"
+    # Rerun to show user message and typing
+    st.rerun()
 
-    # Add assistant's response
-    current_chat.append({"role": "assistant", "content": response})
-
-# --- Render All Messages for the Current Mode ---
+# --- Render Chat with "Typing..." Support ---
 for message in current_chat:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        if message.get("status") == "loading":
+            # Render typing animation or dots (for now static text, can be animated with JS/CSS in advanced cases)
+            st.markdown("Assistant is typing... ⏳")
+        else:
+            st.markdown(message["content"])
+
+# --- Generate and Update Response if "loading" placeholder exists ---
+# This part runs AFTER rerun and shows the final answer
+if current_chat and current_chat[-1].get("status") == "loading":
+    user_msg = current_chat[-2]["content"]  # Last user message
+    # Get response based on current mode
+    if st.session_state.rag_mode == "Basic RAG":
+        response = basic_rag(user_msg)
+    else:
+        response = advanced_rag(user_msg)
+    response = response if response else "I'm sorry, I couldn't find an answer. Could you rephrase your question?"
+
+    # Update the loading placeholder with real response
+    current_chat[-1] = {"role": "assistant", "content": response}  # Replace loading with actual content
+
+    # Rerun to show final bot answer
+    st.rerun()
