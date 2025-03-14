@@ -9,7 +9,7 @@ from advanced_rag import *
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Chat Interface with RAG Options", page_icon="💬", layout="wide")
-st.title("💬 Group 97's RAG-Powered Chat Interface with Immediate Response")
+st.title("💬 Group 97's RAG-Powered Chat Interface")
 
 st.markdown("""
 Welcome! Use the toggle below to switch between **Basic RAG** and **Advanced RAG** modes.  
