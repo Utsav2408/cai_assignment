@@ -11,7 +11,9 @@ Each mode responds differently based on the retrieval logic used.
 
 # --- Session State Initialization ---
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I assist you today?"}]  # Initial greeting
+    # Initial greeting message
+    st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I assist you today?"}]
+
 if "rag_mode" not in st.session_state:
     st.session_state.rag_mode = "Basic RAG"  # Default mode
 
@@ -30,13 +32,13 @@ with st.sidebar:
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = [{"role": "assistant", "content": f"Chat cleared. You are now using **{rag_mode}** mode. How can I assist you?"}]
         st.session_state.rag_mode = rag_mode
-        st.rerun()  # ✅ Use st.rerun() instead of st.experimental_rerun()
+        st.rerun()  # Correct rerun method for Streamlit 1.25+
 
 # --- Reset Chat on RAG Mode Change ---
 if st.session_state.rag_mode != rag_mode:
     st.session_state.rag_mode = rag_mode
     st.session_state.messages = [{"role": "assistant", "content": f"You are now using **{rag_mode}**. How can I help you?"}]
-    st.rerun()  # ✅ Correct method
+    st.rerun()
 
 # --- RAG Placeholder Functions ---
 def basic_rag(query):
@@ -48,26 +50,24 @@ def advanced_rag(query):
 # --- Input Field ---
 user_input = st.chat_input("Type your message here...")
 
-# --- Handle User Input and Generate Response ---
+# --- Handle New User Input and Generate Response (Adding to Chat History) ---
 if user_input:
-    user_message = {"role": "user", "content": user_input}
-    st.session_state.messages.append(user_message)
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    # Select appropriate RAG mode to generate a response
+    if rag_mode == "Basic RAG":
+        response = basic_rag(user_input)
+    else:
+        response = advanced_rag(user_input)
 
-    # Select and generate response based on RAG mode
-    response = basic_rag(user_input) if rag_mode == "Basic RAG" else advanced_rag(user_input)
+    # Handle empty/None responses
     response = response if response else "I'm sorry, I couldn't find an answer. Could you rephrase your question?"
 
-    assistant_message = {"role": "assistant", "content": response}
-    st.session_state.messages.append(assistant_message)
+    # Add assistant's response
+    st.session_state.messages.append({"role": "assistant", "content": response})
 
-    with st.chat_message("assistant"):
-        st.markdown(response)
-
-# --- Render Previous Chat History (excluding current user interaction if present) ---
-history_to_render = st.session_state.messages[:-2] if user_input else st.session_state.messages
-for message in history_to_render:
+# --- Render All Messages in Order ---
+for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
