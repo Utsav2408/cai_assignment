@@ -107,7 +107,7 @@ def download_pdfs(drive_links, download_dir):
         pdf_files[file_name] = output_path
     return pdf_files
 
-download_pdfs(drive_links, download_dir)
+# download_pdfs(drive_links, download_dir)
 
 """# Data Extraction"""
 
@@ -157,11 +157,11 @@ def process_pdf(file_path: str):
     extract_text_from_pdf(file_path, f"{file_prefix}_text.txt")
     extract_and_summarize_tables(file_path, f"{file_prefix}_tables.txt")
 
-# Process each file
-for file in pdf_files:
-    process_pdf(file)
+# # Process each file
+# for file in pdf_files:
+#     process_pdf(file)
 
-print("🎉 Processing completed. Check the extracted_text/ and extracted_tables_natural/ folders.")
+# print("🎉 Processing completed. Check the extracted_text/ and extracted_tables_natural/ folders.")
 
 """# Chunking (Chunk Merging)"""
 
@@ -413,36 +413,36 @@ def full_pipeline(text_file, table_file, output_file, source_label, merged_dir="
     return output_file, source_label, unmatched_tables
 
 
-# Run for Tesla 10K 2024 and 2025
-merged_results = []
-# Run pipeline
-# Tesla 2024
-output_24, label_24, unmatched_24 = full_pipeline(
-    "extracted_text/Tesla_10K-24_text.txt",
-    "extracted_tables_natural/Tesla_10K-24_tables.txt",
-    "Tesla_10K-24_merged.txt",
-    "Tesla_10K-24"
-)
-merged_results.append((label_24, output_24, unmatched_24))
-# Tesla 2025
-output_25, label_25, unmatched_25 = full_pipeline(
-    "extracted_text/Tesla_10K-25_text.txt",
-    "extracted_tables_natural/Tesla_10K-25_tables.txt",
-    "Tesla_10K-25_merged.txt",
-    "Tesla_10K-25"
-)
-merged_results.append((label_25, output_25, unmatched_25))
-# Prepare sources_info for Faiss Index Builder
-sources_info = []
-for label, merged_file, unmatched_tables in merged_results:
-    sources_info.append((label, merged_file))
-# Build unified Faiss index including unmatched tables
-build_faiss(
-    sources_info,
-    "merged",
-    "faiss_indices/tesla_10K_unified_index.faiss",
-    "faiss_indices/tesla_10K_metadata.json"
-)
+# # Run for Tesla 10K 2024 and 2025
+# merged_results = []
+# # Run pipeline
+# # Tesla 2024
+# output_24, label_24, unmatched_24 = full_pipeline(
+#     "extracted_text/Tesla_10K-24_text.txt",
+#     "extracted_tables_natural/Tesla_10K-24_tables.txt",
+#     "Tesla_10K-24_merged.txt",
+#     "Tesla_10K-24"
+# )
+# merged_results.append((label_24, output_24, unmatched_24))
+# # Tesla 2025
+# output_25, label_25, unmatched_25 = full_pipeline(
+#     "extracted_text/Tesla_10K-25_text.txt",
+#     "extracted_tables_natural/Tesla_10K-25_tables.txt",
+#     "Tesla_10K-25_merged.txt",
+#     "Tesla_10K-25"
+# )
+# merged_results.append((label_25, output_25, unmatched_25))
+# # Prepare sources_info for Faiss Index Builder
+# sources_info = []
+# for label, merged_file, unmatched_tables in merged_results:
+#     sources_info.append((label, merged_file))
+# # Build unified Faiss index including unmatched tables
+# build_faiss(
+#     sources_info,
+#     "merged",
+#     "faiss_indices/tesla_10K_unified_index.faiss",
+#     "faiss_indices/tesla_10K_metadata.json"
+# )
 
 """# Guard Rails
 
@@ -642,8 +642,8 @@ def generate_financial_response(query):
     # Run adaptive retrieval with confidence
     result = adaptive_retrieve_and_answer(
         query,
-        "faiss_indices/tesla_10K_unified_index.faiss",
-        "faiss_indices/tesla_10K_metadata.json",
+        "tesla_10K_unified_index.faiss",
+        "tesla_10K_metadata.json",
         slm,
         max_k=5
     )
