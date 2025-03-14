@@ -56,7 +56,6 @@ def basic_rag(query):
 
 def advanced_rag(query):
     result = generate_financial_response_sync(query)
-    logging.info(result)
     if type(result) == str:
         return result
     else:
