@@ -49,8 +49,8 @@ def basic_rag(query):
     time.sleep(2)  # Simulate processing delay
     return f"[Basic RAG] Here is a simple answer to: '{query}'"
 
-async def advanced_rag(query):
-    result = await generate_financial_response(query)
+def advanced_rag(query):
+    result = generate_financial_response_sync(query)
     if isinstance(result, str):
         return result
     elif isinstance(result, dict):
