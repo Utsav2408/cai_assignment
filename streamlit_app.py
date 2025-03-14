@@ -1,5 +1,6 @@
 import streamlit as st
 import time  # Just for simulating delay, remove in production
+from advanced_rag import *
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Chat Interface with RAG Options", page_icon="💬", layout="wide")
@@ -48,9 +49,16 @@ def basic_rag(query):
     time.sleep(2)  # Simulate processing delay
     return f"[Basic RAG] Here is a simple answer to: '{query}'"
 
-def advanced_rag(query):
-    time.sleep(2)  # Simulate processing delay
-    return f"[Advanced RAG] This is a detailed response to: '{query}', leveraging deeper context and semantic search."
+async def advanced_rag(query):
+    result = await generate_financial_response(query)
+    if isinstance(result, str):
+        return result
+    elif isinstance(result, dict):
+        response = f"**Answer:** {result['answer']}\n\n"
+        response += f"**Confidence Score:** {result['confidence_score']:.2f} ({result['confidence_band']})"
+        return response
+    else:
+        return "I'm sorry, I couldn't process this query."
 
 # --- Select Current Mode's Chat History ---
 current_chat = st.session_state.basic_messages if st.session_state.rag_mode == "Basic RAG" else st.session_state.advanced_messages
