@@ -1,3 +1,8 @@
+import logging
+
+# Setup basic logging configuration (runs once)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 import streamlit as st
 import time  # Just for simulating delay, remove in production
 from advanced_rag import *
@@ -51,7 +56,7 @@ def basic_rag(query):
 
 def advanced_rag(query):
     result = generate_financial_response_sync(query)
-    st.write(result)
+    log.info(result)
     if isinstance(result, str):
         return result
     elif isinstance(result, dict):
