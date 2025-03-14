@@ -1,0 +1,7 @@
+pymupdf
+camelot-py[cv]
+transformers
+sentence-transformers
+faiss-cpu
+gdown
+numpy
