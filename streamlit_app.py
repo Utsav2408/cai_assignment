@@ -56,15 +56,13 @@ def basic_rag(query):
 
 def advanced_rag(query):
     result = generate_financial_response_sync(query)
-    log.info(result)
-    if isinstance(result, str):
+    logging.info(result)
+    if type(result) == str:
         return result
-    elif isinstance(result, dict):
+    else:
         response = f"**Answer:** {result['answer']}\n\n"
         response += f"**Confidence Score:** {result['confidence_score']:.2f} ({result['confidence_band']})"
         return response
-    else:
-        return "I'm sorry, I couldn't process this query."
 
 # --- Select Current Mode's Chat History ---
 current_chat = st.session_state.basic_messages if st.session_state.rag_mode == "Basic RAG" else st.session_state.advanced_messages
