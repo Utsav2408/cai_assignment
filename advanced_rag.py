@@ -107,8 +107,6 @@ def download_pdfs(drive_links, download_dir):
         pdf_files[file_name] = output_path
     return pdf_files
 
-# download_pdfs(drive_links, download_dir)
-
 """# Data Extraction"""
 
 def extract_text_from_pdf(pdf_path: str, output_filename: str):
@@ -156,12 +154,6 @@ def process_pdf(file_path: str):
     file_prefix = os.path.splitext(os.path.basename(file_path))[0].replace(" ", "_")
     extract_text_from_pdf(file_path, f"{file_prefix}_text.txt")
     extract_and_summarize_tables(file_path, f"{file_prefix}_tables.txt")
-
-# # Process each file
-# for file in pdf_files:
-#     process_pdf(file)
-
-# print("🎉 Processing completed. Check the extracted_text/ and extracted_tables_natural/ folders.")
 
 """# Chunking (Chunk Merging)"""
 
@@ -412,44 +404,12 @@ def full_pipeline(text_file, table_file, output_file, source_label, merged_dir="
     # Return merged output file name and unmatched tables for indexing later
     return output_file, source_label, unmatched_tables
 
-
-# # Run for Tesla 10K 2024 and 2025
-# merged_results = []
-# # Run pipeline
-# # Tesla 2024
-# output_24, label_24, unmatched_24 = full_pipeline(
-#     "extracted_text/Tesla_10K-24_text.txt",
-#     "extracted_tables_natural/Tesla_10K-24_tables.txt",
-#     "Tesla_10K-24_merged.txt",
-#     "Tesla_10K-24"
-# )
-# merged_results.append((label_24, output_24, unmatched_24))
-# # Tesla 2025
-# output_25, label_25, unmatched_25 = full_pipeline(
-#     "extracted_text/Tesla_10K-25_text.txt",
-#     "extracted_tables_natural/Tesla_10K-25_tables.txt",
-#     "Tesla_10K-25_merged.txt",
-#     "Tesla_10K-25"
-# )
-# merged_results.append((label_25, output_25, unmatched_25))
-# # Prepare sources_info for Faiss Index Builder
-# sources_info = []
-# for label, merged_file, unmatched_tables in merged_results:
-#     sources_info.append((label, merged_file))
-# # Build unified Faiss index including unmatched tables
-# build_faiss(
-#     sources_info,
-#     "merged",
-#     "faiss_indices/tesla_10K_unified_index.faiss",
-#     "faiss_indices/tesla_10K_metadata.json"
-# )
-
 """# Guard Rails
 
 ## Input Guard Rails
 """
 
-async def validate_user_query(user_query, level="moderate"):
+def validate_user_query(user_query, level="moderate"):
     """
     Validates user queries based on the moderation level.
     Levels:
@@ -482,7 +442,7 @@ async def validate_user_query(user_query, level="moderate"):
 
 """## Output Guard Rails"""
 
-async def filter_rag_response(user_query, model_response, retrieved_docs=None):
+def filter_rag_response(user_query, model_response, retrieved_docs=None):
     """
     Filters RAG-generated responses using fact-checking, speculation detection, and safety filtering.
     Uses retrieved documents if available; otherwise, falls back to a finance reference.
@@ -524,7 +484,7 @@ Query: {query}
 
 Category:
 """
-    result = await slm(classifier_prompt, max_length=10)[0]['generated_text'].strip().lower()
+    result = slm(classifier_prompt, max_length=10)[0]['generated_text'].strip().lower()
     if "simple" in result:
         return "simple"
     elif "moderate" in result:
@@ -546,12 +506,12 @@ Question: {query}
 
 Answer:
 """
-    response = await slm_pipeline(final_prompt, max_length=250, truncation=True)[0]['generated_text']
+    response = slm_pipeline(final_prompt, max_length=250, truncation=True)[0]['generated_text']
     return response
 
 """## Calculate confidence scores"""
 
-async def calculate_confidence_score(distances):
+def calculate_confidence_score(distances):
     """
     Calculate a confidence score based on distances from Faiss search.
     Lower distance → higher confidence.
@@ -600,7 +560,7 @@ async def adaptive_retrieve_and_answer(query, index_file, metadata_file, slm_pip
         results, distances = await adaptive_search(index_file, metadata_file, query, top_k=max_k * 2)
 
     # Calculate confidence score
-    confidence, confidence_band = await calculate_confidence_score(distances)
+    confidence, confidence_band = calculate_confidence_score(distances)
 
     # Build context for SLM
     context = "\n".join([f"- {res['chunk']}" for res in results])
@@ -620,10 +580,10 @@ Question: {query}
 
 Detailed Answer:
 """
-        answer = await slm_pipeline(complex_prompt, max_length=400, truncation=True)[0]['generated_text']
+        answer = slm_pipeline(complex_prompt, max_length=400, truncation=True)[0]['generated_text']
 
     # Apply output guard rail
-    final_answer = await filter_rag_response(query, answer.strip(), [res['chunk'] for res in results])
+    final_answer = filter_rag_response(query, answer.strip(), [res['chunk'] for res in results])
 
     # Return final answer with confidence
     return {
@@ -635,7 +595,7 @@ Detailed Answer:
 async def generate_financial_response(query):
   # INPUT GUARD RAIL...
   moderation_level = ['lenient', 'moderate', 'strict']
-  validation = await validate_user_query(query, level=moderation_level[0])
+  validation = validate_user_query(query, level=moderation_level[0])
 
   if validation:
     print("Valid Query")
@@ -651,3 +611,4 @@ async def generate_financial_response(query):
     return result
   else:
     return "Query Not Relevant: Please ask about Tesla's financial data."
+
