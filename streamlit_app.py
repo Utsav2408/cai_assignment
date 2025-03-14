@@ -6,14 +6,14 @@ st.title("💬 RAG-Powered Chat Interface with Immediate Response")
 
 st.markdown("""
 Welcome! Use the toggle below to switch between **Basic RAG** and **Advanced RAG** modes.  
-Each mode responds differently based on the retrieval logic used.
+Each mode keeps a separate chat history to help you stay organized.
 """)
 
-# --- Session State Initialization ---
-if "messages" not in st.session_state:
-    # Initial greeting message
-    st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I assist you today?"}]
-
+# --- Session State Initialization for Both Modes ---
+if "basic_messages" not in st.session_state:
+    st.session_state.basic_messages = [{"role": "assistant", "content": "Hi! You are now in **Basic RAG** mode. How can I help you?"}]
+if "advanced_messages" not in st.session_state:
+    st.session_state.advanced_messages = [{"role": "assistant", "content": "Hi! You are now in **Advanced RAG** mode. How can I help you?"}]
 if "rag_mode" not in st.session_state:
     st.session_state.rag_mode = "Basic RAG"  # Default mode
 
@@ -28,17 +28,18 @@ with st.sidebar:
         index=0 if st.session_state.rag_mode == "Basic RAG" else 1
     )
 
-    # Clear Chat button
-    if st.button("🗑️ Clear Chat"):
-        st.session_state.messages = [{"role": "assistant", "content": f"Chat cleared. You are now using **{rag_mode}** mode. How can I assist you?"}]
-        st.session_state.rag_mode = rag_mode  # Make sure mode stays in sync
-        st.rerun()  # Refresh app to show cleared state
+    # Clear Chat button for current mode
+    if st.button("🗑️ Clear Current Chat"):
+        if rag_mode == "Basic RAG":
+            st.session_state.basic_messages = [{"role": "assistant", "content": "Chat cleared. You are now in **Basic RAG** mode. How can I assist you?"}]
+        else:
+            st.session_state.advanced_messages = [{"role": "assistant", "content": "Chat cleared. You are now in **Advanced RAG** mode. How can I assist you?"}]
+        st.session_state.rag_mode = rag_mode  # Ensure sync
+        st.rerun()
 
-# --- Keep chat history on RAG Mode change ---
-# Simply update mode without clearing chat
+# --- Update mode on switch without clearing chat ---
 if st.session_state.rag_mode != rag_mode:
-    st.session_state.rag_mode = rag_mode  # Update mode only, keep messages intact
-    st.rerun()  # Optional: refresh to update UI if necessary
+    st.session_state.rag_mode = rag_mode  # Just update the active mode
 
 # --- RAG Placeholder Functions ---
 def basic_rag(query):
@@ -47,24 +48,30 @@ def basic_rag(query):
 def advanced_rag(query):
     return f"[Advanced RAG] This is a detailed response to: '{query}', leveraging deeper context and semantic search."
 
-# --- Input Field ---
-user_input = st.chat_input("Type your message here...")
+# --- Select Correct Message Store Based on Mode ---
+current_chat = st.session_state.basic_messages if st.session_state.rag_mode == "Basic RAG" else st.session_state.advanced_messages
 
-# --- Handle New User Input and Generate Response (Adding to Chat History) ---
+# --- Input Field ---
+user_input = st.chat_input(f"Type your message here for {st.session_state.rag_mode}...")
+
+# --- Handle New User Input and Generate Response (Adding to Current Mode's Chat History) ---
 if user_input:
     # Add user message
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    current_chat.append({"role": "user", "content": user_input})
 
-    # Select appropriate RAG mode to generate a response
-    response = basic_rag(user_input) if st.session_state.rag_mode == "Basic RAG" else advanced_rag(user_input)
+    # Generate response based on selected mode
+    if st.session_state.rag_mode == "Basic RAG":
+        response = basic_rag(user_input)
+    else:
+        response = advanced_rag(user_input)
 
     # Handle empty/None responses
     response = response if response else "I'm sorry, I couldn't find an answer. Could you rephrase your question?"
 
     # Add assistant's response
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    current_chat.append({"role": "assistant", "content": response})
 
-# --- Render All Messages in Order ---
-for message in st.session_state.messages:
+# --- Render All Messages for the Current Mode ---
+for message in current_chat:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
