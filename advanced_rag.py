@@ -608,7 +608,7 @@ async def generate_financial_response(query):
         max_k=5
     )
 
-    return result
-  else:
-    return "Query Not Relevant: Please ask about Tesla's financial data."
+import asyncio
 
+def generate_financial_response_sync(query):
+    return asyncio.run(generate_financial_response(query))
