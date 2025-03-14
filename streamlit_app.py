@@ -51,7 +51,7 @@ def basic_rag(query):
 
 def advanced_rag(query):
     result = generate_financial_response_sync(query)
-    print(result)
+    st.write(result)
     if isinstance(result, str):
         return result
     elif isinstance(result, dict):
