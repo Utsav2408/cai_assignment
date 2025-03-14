@@ -2,8 +2,8 @@ import streamlit as st
 
 # --- Title and Description ---
 st.set_page_config(page_title="ChatGPT Streamlit Interface", page_icon="💬", layout="wide")
-st.title("💬 ChatGPT Chat Interface")
-st.markdown("Ask me anything! This is a simple chat interface built with Streamlit.")
+st.title("💬 Group 97 Chat Interface")
+st.markdown("Ask me about Tesla's Financial Statement")
 
 # --- Initialize Session State ---
 if "messages" not in st.session_state:
