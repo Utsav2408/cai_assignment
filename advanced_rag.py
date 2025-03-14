@@ -362,7 +362,7 @@ def build_faiss(sources_info, merged_dir, index_file, metadata_file):
     print(f"Metadata including unmatched tables saved: {metadata_file}")
 
 # Adaptive Search Function
-def adaptive_search(index_file, metadata_file, query, top_k=5):
+async def adaptive_search(index_file, metadata_file, query, top_k=5):
     """
     Search the Faiss index and return top_k relevant chunks with metadata and distance scores.
     """
@@ -449,7 +449,7 @@ def full_pipeline(text_file, table_file, output_file, source_label, merged_dir="
 ## Input Guard Rails
 """
 
-def validate_user_query(user_query, level="moderate"):
+async def validate_user_query(user_query, level="moderate"):
     """
     Validates user queries based on the moderation level.
     Levels:
@@ -482,7 +482,7 @@ def validate_user_query(user_query, level="moderate"):
 
 """## Output Guard Rails"""
 
-def filter_rag_response(user_query, model_response, retrieved_docs=None):
+async def filter_rag_response(user_query, model_response, retrieved_docs=None):
     """
     Filters RAG-generated responses using fact-checking, speculation detection, and safety filtering.
     Uses retrieved documents if available; otherwise, falls back to a finance reference.
@@ -513,7 +513,7 @@ def filter_rag_response(user_query, model_response, retrieved_docs=None):
 """
 
 # Function to classify query
-def classify_query_complexity(query):
+async def classify_query_complexity(query):
     classifier_prompt = f"""
 Classify this query as one of the following categories:
 - Simple
@@ -524,7 +524,7 @@ Query: {query}
 
 Category:
 """
-    result = slm(classifier_prompt, max_length=10)[0]['generated_text'].strip().lower()
+    result = await slm(classifier_prompt, max_length=10)[0]['generated_text'].strip().lower()
     if "simple" in result:
         return "simple"
     elif "moderate" in result:
@@ -535,7 +535,7 @@ Category:
 """## Generate Answer function for Simple & Moderate queries"""
 
 # Answer generator from retrieved context
-def generate_answer_with_context(query, context, slm_pipeline):
+async def generate_answer_with_context(query, context, slm_pipeline):
     final_prompt = f"""
 You are a financial analyst. Given the following context from Tesla's reports, provide an answer to the Question concisely and factually.
 
@@ -546,12 +546,12 @@ Question: {query}
 
 Answer:
 """
-    response = slm_pipeline(final_prompt, max_length=250, truncation=True)[0]['generated_text']
+    response = await slm_pipeline(final_prompt, max_length=250, truncation=True)[0]['generated_text']
     return response
 
 """## Calculate confidence scores"""
 
-def calculate_confidence_score(distances):
+async def calculate_confidence_score(distances):
     """
     Calculate a confidence score based on distances from Faiss search.
     Lower distance → higher confidence.
@@ -584,23 +584,23 @@ def calculate_confidence_score(distances):
 
 """## Adaptive Retrieval"""
 
-def adaptive_retrieve_and_answer(query, index_file, metadata_file, slm_pipeline, max_k=5):
+async def adaptive_retrieve_and_answer(query, index_file, metadata_file, slm_pipeline, max_k=5):
     """
     Adaptive retrieval and answer generation, including confidence scoring.
     """
 
     # Classify query complexity
-    query_type = classify_query_complexity(query)
+    query_type = await classify_query_complexity(query)
     print(f"🔍 Query classified as: {query_type}")
 
     # Perform adaptive search and get distances
     if query_type == "simple" or query_type == "moderate":
-        results, distances = adaptive_search(index_file, metadata_file, query, top_k=max_k)
+        results, distances = await adaptive_search(index_file, metadata_file, query, top_k=max_k)
     elif query_type == "complex":
-        results, distances = adaptive_search(index_file, metadata_file, query, top_k=max_k * 2)
+        results, distances = await adaptive_search(index_file, metadata_file, query, top_k=max_k * 2)
 
     # Calculate confidence score
-    confidence, confidence_band = calculate_confidence_score(distances)
+    confidence, confidence_band = await calculate_confidence_score(distances)
 
     # Build context for SLM
     context = "\n".join([f"- {res['chunk']}" for res in results])
@@ -608,7 +608,7 @@ def adaptive_retrieve_and_answer(query, index_file, metadata_file, slm_pipeline,
 
     # Generate answer based on query type
     if query_type == "simple" or query_type == "moderate":
-        answer = generate_answer_with_context(query, context, slm_pipeline)
+        answer = await generate_answer_with_context(query, context, slm_pipeline)
     elif query_type == "complex":
         complex_prompt = f"""
 You are a Tesla financial expert. Based on the following data, provide a detailed and reasoned answer to the question.
@@ -620,10 +620,10 @@ Question: {query}
 
 Detailed Answer:
 """
-        answer = slm_pipeline(complex_prompt, max_length=400, truncation=True)[0]['generated_text']
+        answer = await slm_pipeline(complex_prompt, max_length=400, truncation=True)[0]['generated_text']
 
     # Apply output guard rail
-    final_answer = filter_rag_response(query, answer.strip(), [res['chunk'] for res in results])
+    final_answer = await filter_rag_response(query, answer.strip(), [res['chunk'] for res in results])
 
     # Return final answer with confidence
     return {
@@ -632,15 +632,15 @@ Detailed Answer:
         "confidence_band": confidence_band
     }
 
-def generate_financial_response(query):
+async def generate_financial_response(query):
   # INPUT GUARD RAIL...
   moderation_level = ['lenient', 'moderate', 'strict']
-  validation = validate_user_query(query, level=moderation_level[0])
+  validation = await validate_user_query(query, level=moderation_level[0])
 
   if validation:
     print("Valid Query")
     # Run adaptive retrieval with confidence
-    result = adaptive_retrieve_and_answer(
+    result = await adaptive_retrieve_and_answer(
         query,
         "tesla_10K_unified_index.faiss",
         "tesla_10K_metadata.json",
