@@ -6,6 +6,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 import streamlit as st
 import time  # Just for simulating delay, remove in production
 from advanced_rag import *
+from basic_rag import *
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Chat Interface with RAG Options", page_icon="💬", layout="wide")
@@ -51,8 +52,13 @@ if st.session_state.rag_mode != rag_mode:
 
 # --- RAG Placeholder Functions (simulate delay) ---
 def basic_rag(query):
-    time.sleep(2)  # Simulate processing delay
-    return f"[Basic RAG] Here is a simple answer to: '{query}'"
+    result = basic_generate_financial_response_sync(query)
+    if type(result) == str:
+        return result
+    else:
+        response = f"**Answer:** {result['answer']}\n\n"
+        response += f"**Confidence Score:** {result['confidence_score']:.2f} ({result['confidence_band']})"
+        return response
 
 def advanced_rag(query):
     result = generate_financial_response_sync(query)
