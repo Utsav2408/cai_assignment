@@ -5,3 +5,6 @@ sentence-transformers
 faiss-cpu
 gdown
 numpy
+langchain_community
+accelerate
+pypdf
