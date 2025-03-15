@@ -247,9 +247,9 @@ def calculate_confidence_score(distances):
     confidence = 1.0 - avg_norm_distance
 
     # Band assignment
-    if confidence >= 0.5:
+    if confidence >= 0.7:
         band = "High"
-    elif confidence >= 0.3:
+    elif confidence >= 0.5:
         band = "Medium"
     else:
         band = "Low"
