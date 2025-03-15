@@ -305,7 +305,7 @@ async def basic_rag_response(query):
     answer = await query_rag("tesla_faiss_index", query)
     return answer
   else:
-      return "Query Not Relevant: Please ask about Tesla's financial data."
+    return "Query Not Relevant: Please ask about Tesla's financial data."
 
 import asyncio
 
