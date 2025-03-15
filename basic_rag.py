@@ -232,7 +232,7 @@ def calculate_confidence_score(distances):
 
     Returns:
         confidence (float): 0 to 1 score.
-        band (str): 'High', 'Medium', 'Low'
+        band (str): 'High', 'Low'
     """
     if len(distances) == 0:
         return 0.0, "Low"
@@ -247,10 +247,8 @@ def calculate_confidence_score(distances):
     confidence = 1.0 - avg_norm_distance
 
     # Band assignment
-    if confidence >= 0.7:
+    if confidence >= 0.5:
         band = "High"
-    elif confidence >= 0.5:
-        band = "Medium"
     else:
         band = "Low"
 
