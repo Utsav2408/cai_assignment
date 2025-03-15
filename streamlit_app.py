@@ -4,7 +4,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 import streamlit as st
-import time  # Just for simulating delay, remove in production
+import time
 from advanced_rag import *
 from basic_rag import *
 
