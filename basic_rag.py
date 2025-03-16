@@ -273,7 +273,7 @@ async def query_rag(index_path: str, query: str, top_k=5):
 
     # Build prompt
     prompt = f"""
-You are a financial analyst. Given the following context from Tesla's reports, provide an answer to the Question concisely and factually.
+Consider you are a financial analyst. Given the following context from Tesla's reports, provide a complete answer to the Question concisely and factually.
 
 Context:
 {context}
